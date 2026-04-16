@@ -1,56 +1,76 @@
 import streamlit as st
-import requests
-import json
 import sys
 from pathlib import Path
 
-# Add app directory to path so we can import local modules
+# ============================================================================
+# 1. MUST BE THE VERY FIRST STREAMLIT COMMAND
+# ============================================================================
+st.set_page_config(page_title="AI Real Estate Agent", layout="wide")
+
+# ============================================================================
+# 2. Now we can safely import everything else
+# ============================================================================
+import requests
+import json
+import numpy as np
+
 sys.path.append(str(Path(__file__).parent))
 
-# Attempt to import FastAPI backend functions directly
+BACKEND_AVAILABLE = False
+model_pipeline = None
+train_stats = None
+
 try:
     from llm_chain import extract_features as extract_features_direct, generate_interpretation
     from utils import load_model, load_stats, prepare_features_for_prediction
-    import numpy as np
     BACKEND_AVAILABLE = True
+    # Load model eagerly only if backend is available
+    model_pipeline = load_model()
+    train_stats = load_stats()
 except ImportError as e:
+    # We'll show a warning later, after the page config
+    import_warning = f"Direct backend import failed: {e}. Will try HTTP fallback."
+except Exception as e:
+    import_warning = f"Failed to load model: {e}"
     BACKEND_AVAILABLE = False
-    st.warning(f"Direct backend import failed: {e}. Will try HTTP fallback.")
 
-# Configuration
-API_URL = "http://localhost:8000"
-USE_HTTP_API = False  # Set to True only if you want to force HTTP even if imports work
-
-st.set_page_config(page_title="AI Real Estate Agent", layout="wide")
+# ============================================================================
+# 3. UI Setup
+# ============================================================================
 st.title("🏡 AI Real Estate Agent")
 st.markdown("Describe a property in plain English, review the extracted features, and get an AI‑powered price prediction.")
 
-# Initialize session state
+# Show any import warnings now (after page config)
+if 'import_warning' in locals():
+    st.warning(import_warning)
+
+# API fallback URL (only used if BACKEND_AVAILABLE is False)
+API_URL = "http://localhost:8000"
+
+# Session state initialization
 if "extraction" not in st.session_state:
     st.session_state.extraction = None
 if "edited_features" not in st.session_state:
     st.session_state.edited_features = {}
 
-# Load model and stats once (if using direct mode)
-if BACKEND_AVAILABLE and not USE_HTTP_API:
-    try:
-        model_pipeline = load_model()
-        train_stats = load_stats()
-    except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        st.stop()
+# ============================================================================
+# 4. User Input
+# ============================================================================
+query = st.text_input(
+    "Your property description:",
+    placeholder="e.g., 3 bed, 2 bath ranch with a 2‑car garage, 1800 sqft, nice neighborhood"
+)
 
-# Input
-query = st.text_input("Your property description:", 
-                      placeholder="e.g., 3 bed, 2 bath ranch with a 2‑car garage, 1800 sqft, nice neighborhood")
 col1, col2 = st.columns([1, 2])
 with col1:
     prompt_version = st.selectbox("Prompt version:", ["v1", "v2"], index=0)
 
+# ============================================================================
+# 5. Feature Extraction
+# ============================================================================
 if st.button("Extract Features") and query:
     with st.spinner("Analyzing your description..."):
-        if BACKEND_AVAILABLE and not USE_HTTP_API:
-            # Direct function call
+        if BACKEND_AVAILABLE:
             try:
                 extraction_result = extract_features_direct(query, prompt_version)
                 st.session_state.extraction = extraction_result.dict()
@@ -61,11 +81,12 @@ if st.button("Extract Features") and query:
             except Exception as e:
                 st.error(f"Extraction failed: {e}")
         else:
-            # HTTP fallback
             try:
-                resp = requests.post(f"{API_URL}/extract", 
-                                     json={"query": query, "prompt_version": prompt_version},
-                                     timeout=10)
+                resp = requests.post(
+                    f"{API_URL}/extract",
+                    json={"query": query, "prompt_version": prompt_version},
+                    timeout=10
+                )
                 if resp.status_code == 200:
                     st.session_state.extraction = resp.json()
                     st.session_state.edited_features = {
@@ -79,7 +100,9 @@ if st.button("Extract Features") and query:
             except Exception as e:
                 st.error(f"Unexpected error: {e}")
 
-# Display editable form if extraction exists
+# ============================================================================
+# 6. Feature Editing Form
+# ============================================================================
 if st.session_state.extraction:
     st.subheader("Review & Edit Features")
     missing = st.session_state.extraction.get("missing_features", [])
@@ -98,30 +121,34 @@ if st.session_state.extraction:
                 idx = options.index(current_val) if current_val in options else 0
                 val = st.selectbox(f"{feat} ({confidence})", options, index=idx, help=reasoning)
             else:
-                val = st.text_input(f"{feat} ({confidence})", 
-                                    value=str(st.session_state.edited_features.get(feat, "")),
-                                    help=reasoning)
+                val = st.text_input(
+                    f"{feat} ({confidence})",
+                    value=str(st.session_state.edited_features.get(feat, "")),
+                    help=reasoning
+                )
             updated_features[feat] = val
 
     st.session_state.edited_features = updated_features
 
+    # ========================================================================
+    # 7. Prediction
+    # ========================================================================
     if st.button("Predict Price", type="primary"):
         payload_features = {k: (v if v != "" else None) for k, v in st.session_state.edited_features.items()}
-        
+
         with st.spinner("Calculating prediction..."):
-            if BACKEND_AVAILABLE and not USE_HTTP_API:
-                # Direct prediction
+            if BACKEND_AVAILABLE:
                 try:
                     input_df = prepare_features_for_prediction(payload_features)
                     pred_log = model_pipeline.predict(input_df)[0]
                     pred_price = float(np.expm1(pred_log))
-                    
+
                     interpretation = generate_interpretation(
                         features=payload_features,
                         predicted_price=pred_price,
                         stats=train_stats
                     )
-                    
+
                     st.success(f"### Predicted Sale Price: ${pred_price:,.0f}")
                     st.info(interpretation)
                     with st.expander("Market Comparison"):
@@ -130,11 +157,12 @@ if st.session_state.extraction:
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
             else:
-                # HTTP fallback
                 try:
-                    pred_resp = requests.post(f"{API_URL}/predict", 
-                                              json={"features": payload_features, "query": query},
-                                              timeout=10)
+                    pred_resp = requests.post(
+                        f"{API_URL}/predict",
+                        json={"features": payload_features, "query": query},
+                        timeout=10
+                    )
                     if pred_resp.status_code == 200:
                         pred = pred_resp.json()
                         st.success(f"### Predicted Sale Price: ${pred['predicted_price']:,.0f}")
