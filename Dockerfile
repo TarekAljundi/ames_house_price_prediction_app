@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
-COPY models/ ./models/
+COPY model/ ./model/
 COPY prompts/ ./prompts/
 
 # Expose ports for FastAPI (8000) and Streamlit (8501)

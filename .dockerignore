@@ -1,0 +1,8 @@
+/.venv
+.env
+__pycache__
+/notebooks
+.git/
+.gitignore
+Dockerfile
+.dockerignore
