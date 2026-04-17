@@ -2,49 +2,13 @@ You are an AI real estate assistant. Extract property features from the user's q
 
 Example 1:
 Query: "3 bed, 2 bath ranch with a 2-car garage, 1800 sqft, nice neighborhood"
-Output:
-{{
-  "features": {{
-    "OverallQual": {{"value": 7, "confidence": "medium", "reasoning": "'Nice' suggests above‑average quality."}},
-    "GrLivArea": {{"value": 1800, "confidence": "high", "reasoning": "Explicitly stated."}},
-    "GarageArea": {{"value": 800, "confidence": "medium", "reasoning": "2‑car garage ≈ 800 sqft."}},
-    "TotalBsmtSF": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "FullBath": {{"value": 2, "confidence": "high", "reasoning": "Stated '2 bath'."}},
-    "1stFlrSF": {{"value": 1800, "confidence": "medium", "reasoning": "Ranch style implies single story."}},
-    "TotRmsAbvGrd": {{"value": 6, "confidence": "low", "reasoning": "Estimated: 3 beds + living + dining + kitchen."}},
-    "LotArea": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "GarageCars": {{"value": 2, "confidence": "high", "reasoning": "Explicit '2‑car garage'."}},
-    "MasVnrArea": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "LotFrontage": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "HouseStyle": {{"value": "1Story", "confidence": "high", "reasoning": "'Ranch' → 1Story."}}
-  }},
-  "missing_features": ["TotalBsmtSF", "LotArea", "MasVnrArea", "LotFrontage"],
-  "raw_query": "3 bed, 2 bath ranch with a 2-car garage, 1800 sqft, nice neighborhood"
-}}
+Output: {"features":{"OverallQual":{"value":7,"confidence":"medium","reasoning":"'Nice' suggests above-average."},"GrLivArea":{"value":1800,"confidence":"high","reasoning":"Explicit."},"GarageArea":{"value":800,"confidence":"medium","reasoning":"2-car ≈800 sqft."},"TotalBsmtSF":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"FullBath":{"value":2,"confidence":"high","reasoning":"'2 bath'."},"1stFlrSF":{"value":1800,"confidence":"medium","reasoning":"Ranch=1 story."},"TotRmsAbvGrd":{"value":6,"confidence":"low","reasoning":"Estimate: 3 beds+living+kitchen."},"LotArea":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"GarageCars":{"value":2,"confidence":"high","reasoning":"'2-car garage'."},"MasVnrArea":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"LotFrontage":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"HouseStyle":{"value":"1Story","confidence":"high","reasoning":"'Ranch'."}},"missing_features":["TotalBsmtSF","LotArea","MasVnrArea","LotFrontage"],"raw_query":"3 bed, 2 bath ranch with a 2-car garage, 1800 sqft, nice neighborhood"}
 
 Example 2:
 Query: "Older Victorian near downtown, 4 bedrooms, 2.5 baths, needs some TLC, small lot"
-Output:
-{{
-  "features": {{
-    "OverallQual": {{"value": 4, "confidence": "medium", "reasoning": "'Needs TLC' suggests below‑average condition."}},
-    "GrLivArea": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "GarageArea": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "TotalBsmtSF": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "FullBath": {{"value": 2, "confidence": "high", "reasoning": "2.5 baths → 2 full."}},
-    "1stFlrSF": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "TotRmsAbvGrd": {{"value": 7, "confidence": "low", "reasoning": "Estimate: 4 beds + living + dining + kitchen."}},
-    "LotArea": {{"value": 5000, "confidence": "low", "reasoning": "'Small lot' in Ames ≈ 5000 sqft."}},
-    "GarageCars": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "MasVnrArea": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "LotFrontage": {{"value": null, "confidence": "missing", "reasoning": "Not mentioned."}},
-    "HouseStyle": {{"value": "2Story", "confidence": "medium", "reasoning": "Victorian typically two‑story."}}
-  }},
-  "missing_features": ["GrLivArea", "GarageArea", "TotalBsmtSF", "1stFlrSF", "GarageCars", "MasVnrArea", "LotFrontage"],
-  "raw_query": "Older Victorian near downtown, 4 bedrooms, 2.5 baths, needs some TLC, small lot"
-}}
+Output: {"features":{"OverallQual":{"value":4,"confidence":"medium","reasoning":"'Needs TLC'=below average."},"GrLivArea":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"GarageArea":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"TotalBsmtSF":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"FullBath":{"value":2,"confidence":"high","reasoning":"2.5 baths → 2 full."},"1stFlrSF":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"TotRmsAbvGrd":{"value":7,"confidence":"low","reasoning":"Estimate: 4 beds+living+kitchen."},"LotArea":{"value":5000,"confidence":"low","reasoning":"'Small lot' ≈5000 sqft."},"GarageCars":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"MasVnrArea":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"LotFrontage":{"value":null,"confidence":"missing","reasoning":"Not mentioned."},"HouseStyle":{"value":"2Story","confidence":"medium","reasoning":"Victorian=2-story."}},"missing_features":["GrLivArea","GarageArea","TotalBsmtSF","1stFlrSF","GarageCars","MasVnrArea","LotFrontage"],"raw_query":"Older Victorian near downtown, 4 bedrooms, 2.5 baths, needs some TLC, small lot"}
 
 Now extract features from this query:
 {query}
 
-Return ONLY valid JSON with the exact structure shown above. Do not add commentary.
+Return ONLY valid JSON (no extra text, no markdown).
