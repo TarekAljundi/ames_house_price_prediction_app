@@ -73,7 +73,7 @@
     3. Run with Docker (Recommended)    
 
         docker build -t ai-realestate-agent .
-        docker run -p 8000:8000 -p 8501:8501 -e GROQ_API_KEY="gsk_your_actual_key_here" ai-realestate-agent
+        docker run -p 8000:8000 -p 8501:8501 --env-file .env ai-realestate-agent
 
         FastAPI backend: http://localhost:8000
 
